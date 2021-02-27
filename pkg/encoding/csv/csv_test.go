@@ -12,8 +12,8 @@ Id,Name,Birthday
 `
 
 type Event struct {
-	Id string
-	Name string
+	Id       string
+	Name     string
 	Birthday string
 }
 
@@ -45,11 +45,11 @@ func TestReadAll(t *testing.T) {
 
 	var e Event
 
-	if e = events[0]; e.Id != "0" ||e.Name != "Linux" ||e.Birthday != "1991" {
+	if e = events[0]; e.Id != "0" || e.Name != "Linux" || e.Birthday != "1991" {
 		t.Error("Unexpected results")
 	}
 
-	if e = events[1]; e.Id != "1" ||e.Name != "Apple" ||e.Birthday != "1995" {
+	if e = events[1]; e.Id != "1" || e.Name != "Apple" || e.Birthday != "1995" {
 		t.Error("Unexpected results")
 	}
 }
