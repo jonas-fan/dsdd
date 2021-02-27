@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jonas-fan/dsdd/internal/cmd"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,10 @@ func main() {
 		Use:   "dsdd",
 		Short: name,
 		Long:  name,
+	}
+
+	for _, each := range cmd.NewCommands() {
+		command.AddCommand(each)
 	}
 
 	if err := command.Execute(); err != nil {
