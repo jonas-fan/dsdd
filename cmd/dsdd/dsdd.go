@@ -7,11 +7,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var version string
+
 func main() {
+	name := fmt.Sprintf("Deep Security Diagnostic Debugger %s", version)
+
 	command := &cobra.Command{
-		Use: "dsdd",
-		Short: "Deep Security Diagnostic Debugger",
-		Long: "Deep Security Diagnostic Debugger",
+		Use:   "dsdd",
+		Short: name,
+		Long:  name,
 	}
 
 	if err := command.Execute(); err != nil {

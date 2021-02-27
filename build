@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -o errexit
+
+case "$1" in
+    "linux/amd64")
+        GOOS=linux
+        GOARCH=amd64
+        ;;
+esac
+
+GIT_COUNT=$(git rev-list HEAD --count)
+GIT_COMMIT=$(git log --pretty=format:"%h" -n 1 | tail -n 1)
+
+GOBUILD_LDFLAGS="-X main.version=1.${GIT_COUNT}.${GIT_COMMIT} -extldflags -static"
+
+GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags "${GOBUILD_LDFLAGS} -s -w" -o output/dsdd cmd/dsdd/dsdd.go
+GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags "${GOBUILD_LDFLAGS}" -o output/dsdd.debug cmd/dsdd/dsdd.go
