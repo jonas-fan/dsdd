@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jonas-fan/dsdd/pkg/encoding/csv"
+	"github.com/jonas-fan/dsdd/pkg/pretty"
 )
 
 const eventFormat = `Origin: %v <%v@%v>
@@ -72,7 +73,7 @@ func (e *SystemEvent) String() string {
 		e.Level,
 		e.EventId,
 		e.Event,
-		e.Description)
+		pretty.Indent(e.Description))
 
 	return builder.String()
 }
