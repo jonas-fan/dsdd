@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"github.com/jonas-fan/dsdd/internal/cmd/event"
 	"github.com/spf13/cobra"
 )
 
 func NewCommands() []*cobra.Command {
 	var commands = []*cobra.Command{
-		// nothing
+		event.NewCommand(),
 	}
 
 	return commands
