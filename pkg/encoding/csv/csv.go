@@ -2,6 +2,7 @@ package csv
 
 import (
 	"encoding/csv"
+	"errors"
 	"io"
 	"reflect"
 )
@@ -12,29 +13,39 @@ type Assigner interface {
 
 var AssignerType = reflect.TypeOf((*Assigner)(nil)).Elem()
 
-func readAll(reader *csv.Reader, pointer interface{}) error {
+func assignerType(pointer interface{}) (reflect.Type, error) {
 	var t reflect.Type
 
 	if t = reflect.TypeOf(pointer); t.Kind() != reflect.Ptr {
-		panic("Not a pointer")
+		return nil, errors.New("Not a pointer")
 	}
 
 	if t = t.Elem(); t.Kind() != reflect.Slice {
-		panic("Not a pointer to slice")
+		return nil, errors.New("Not a pointer to slice")
 	}
 
 	if t = t.Elem(); !reflect.PtrTo(t).Implements(AssignerType) {
-		panic("AssignerType not implemented")
+		return nil, errors.New("AssignerType not implemented")
 	}
 
-	var keys []string
+	return t, nil
+}
+
+func readAll(reader *csv.Reader, pointer interface{}) error {
+	elementType, err := assignerType(pointer)
+
+	if err != nil {
+		return err
+	}
+
 	var out = reflect.ValueOf(pointer).Elem()
+	var keys []string
 
 	for {
 		values, err := reader.Read()
 
 		if err == io.EOF {
-			return nil
+			break
 		} else if err != nil {
 			return err
 		} else if keys == nil {
@@ -42,15 +53,16 @@ func readAll(reader *csv.Reader, pointer interface{}) error {
 			continue
 		}
 
-		ptr := reflect.New(t)
+		ptr := reflect.New(elementType)
 		ptr.Interface().(Assigner).Assign(keys, values)
-
 		out.Set(reflect.Append(out, ptr.Elem()))
 	}
 
 	return nil
 }
 
+// ReadAll reads a whole CSV file then fills a pointer to slice of objects
+// that implement Assigner interface.
 func ReadAll(reader io.Reader, pointer interface{}) error {
 	return readAll(csv.NewReader(reader), pointer)
 }

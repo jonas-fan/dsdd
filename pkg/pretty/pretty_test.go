@@ -11,7 +11,7 @@ func check(t *testing.T, out string, expected string) {
 }
 
 func TestIndentEmptyLine(t *testing.T) {
-	check(t, Indent(""), "")
+	check(t, Indent(""), "    ")
 }
 
 func TestIndentSingleLine(t *testing.T) {
@@ -23,7 +23,7 @@ func TestIndentMultipleLines(t *testing.T) {
 }
 
 func TestIndentWithEmptyLine(t *testing.T) {
-	check(t, IndentWith("", "\t"), "")
+	check(t, IndentWith("", "\t"), "\t")
 }
 
 func TestIndentWithSingleLine(t *testing.T) {

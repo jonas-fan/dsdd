@@ -40,63 +40,46 @@ func TestReadAll(t *testing.T) {
 	}
 
 	if len(events) != 2 {
-		t.Error("Unexpected results")
+		t.Errorf("Expected length: 2, got: %d", len(events))
 	}
 
-	var e Event
-
-	if e = events[0]; e.Id != "0" || e.Name != "Linux" || e.Birthday != "1991" {
-		t.Error("Unexpected results")
+	var expected = []Event{
+		{Id: "0", Name: "Linux", Birthday: "1991"},
+		{Id: "1", Name: "Apple", Birthday: "1995"},
 	}
 
-	if e = events[1]; e.Id != "1" || e.Name != "Apple" || e.Birthday != "1995" {
-		t.Error("Unexpected results")
+	for index := range events {
+		if events[index] != expected[index] {
+			t.Errorf("Expected: %s, got: %s", expected[index], events[index])
+		}
 	}
 }
 
 func TestReadAllNotPointer(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Did not panic")
-		}
-	}()
-
 	reader := strings.NewReader(data)
 	err := ReadAll(reader, false)
 
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Errorf("Expected an error, got: nil")
 	}
 }
 
 func TestReadAllNotPointerToSlice(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Did not panic")
-		}
-	}()
-
 	reader := strings.NewReader(data)
 	output := "not a slice"
 	err := ReadAll(reader, &output)
 
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Errorf("Expected an error, got: nil")
 	}
 }
 
 func TestReadAllAssignerNotImplemented(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Did not panic")
-		}
-	}()
-
 	reader := strings.NewReader(data)
 	events := []string{}
 	err := ReadAll(reader, &events)
 
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Errorf("Expected an error, got: nil")
 	}
 }
