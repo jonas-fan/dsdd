@@ -1,34 +1,17 @@
 package event
 
 import (
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 )
 
 var category string
 
-var timeLayouts = [...]string{
-	"January 2, 2006 15:04:05",
-	"January 2, 2006 15:04:05 PM",
-}
-
-func toTime(value string) time.Time {
-	for _, layout := range timeLayouts {
-		if out, err := time.Parse(layout, value); err == nil {
-			return out
-		}
-	}
-
-	return time.Time{}
-}
-
 func run(cmd *cobra.Command, args []string) {
 	switch strings.ToLower(category) {
 	case "sys", "system":
-		readSystemEvent(filepath.Join("Manager", "hostevents.csv"))
+		readSystemEvent()
 	default:
 		panic("Unknown category: " + category)
 	}
