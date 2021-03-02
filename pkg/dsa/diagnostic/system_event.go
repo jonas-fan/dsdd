@@ -55,7 +55,7 @@ func (e *SystemEvent) Assign(keys []string, values []string) {
 	}
 }
 
-// ReadSystemEvent reads the specific system events file then returns a slice.
+// ReadSystemEventFrom returns the system events from a location.
 func ReadSystemEventFrom(filename string) ([]SystemEvent, error) {
 	file, err := os.Open(filename)
 
@@ -74,8 +74,8 @@ func ReadSystemEventFrom(filename string) ([]SystemEvent, error) {
 	return events, nil
 }
 
-// ReadSystemEvent reads the system events file
-// (e.g., `Manager/hostevents.csv`) then returns a slice.
+// ReadSystemEvent returns the system events mentioned in a diagnostic package.
+// The default location is `Manager/hostevents.csv`.
 func ReadSystemEvent() ([]SystemEvent, error) {
 	return ReadSystemEventFrom(filepath.Join("Manager", "hostevents.csv"))
 }
