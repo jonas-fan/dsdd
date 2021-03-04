@@ -11,16 +11,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func sieve(data *diagnostic.HostMetaData, filters []string) bool {
+func sieve(task *diagnostic.Task, filters []string) bool {
 	for _, each := range filters {
 		switch {
-		case data.PID == each:
+		case task.PID == each:
 			return true
-		case data.User == each:
+		case task.User == each:
 			return true
-		case data.Process == each:
+		case task.Name == each:
 			return true
-		case strings.HasSuffix(data.Path, each):
+		case strings.HasSuffix(task.Path, each):
 			return true
 		}
 	}

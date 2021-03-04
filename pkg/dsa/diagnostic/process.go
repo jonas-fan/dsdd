@@ -10,17 +10,19 @@ import (
 	"strings"
 )
 
-type HostMetaData struct {
+type Task struct {
 	PID         string
 	PPID        string
 	User        string
 	UserID      string
 	Path        string
-	Process     string
 	CommandLine string
+	Name        string
 }
 
-func (m *HostMetaData) Assign(name string, value string) {
+type Tasks []Task
+
+func (m *Task) Assign(name string, value string) {
 	switch strings.ToLower(name) {
 	case "identifier":
 		m.PID = value
@@ -32,16 +34,16 @@ func (m *HostMetaData) Assign(name string, value string) {
 		m.UserID = value
 	case "path":
 		m.Path = value
-	case "process":
-		m.Process = value
 	case "commandline":
 		m.CommandLine = value
+	case "process":
+		m.Name = value
 	}
 }
 
-func (m *HostMetaData) Tidy() {
+func (m *Task) Tidy() {
 	if m.CommandLine == "" {
-		m.CommandLine = fmt.Sprintf("[%s]", m.Process)
+		m.CommandLine = fmt.Sprintf("[%s]", m.Name)
 	}
 
 	if m.Path == "" {
@@ -49,15 +51,11 @@ func (m *HostMetaData) Tidy() {
 	}
 }
 
-type HostMetaDatas struct {
-	Data []HostMetaData
-}
-
-func (m *HostMetaDatas) UnmarshalXMLStartElement(start xml.StartElement, data *HostMetaData) {
+func (t *Tasks) UnmarshalXMLStartElement(start xml.StartElement, task *Task) {
 	switch start.Name.Local {
 	case "HostMetaData":
 		for _, attr := range start.Attr {
-			data.Assign(attr.Name.Local, attr.Value)
+			task.Assign(attr.Name.Local, attr.Value)
 		}
 	case "Attribute":
 		var name string
@@ -72,21 +70,21 @@ func (m *HostMetaDatas) UnmarshalXMLStartElement(start xml.StartElement, data *H
 			}
 		}
 
-		data.Assign(name, value)
+		task.Assign(name, value)
 	}
 }
 
-func (m *HostMetaDatas) UnmarshalXMLEndElement(end xml.EndElement, data *HostMetaData) {
+func (t *Tasks) UnmarshalXMLEndElement(end xml.EndElement, task *Task) {
 	switch end.Name.Local {
 	case "HostMetaData":
-		data.Tidy()
-		m.Data = append(m.Data, *data)
-		*data = HostMetaData{}
+		task.Tidy()
+		*t = append(*t, *task)
+		*task = Task{}
 	}
 }
 
-func (m *HostMetaDatas) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	var data HostMetaData
+func (t *Tasks) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var task Task
 
 	for {
 		token, err := d.Token()
@@ -99,35 +97,33 @@ func (m *HostMetaDatas) UnmarshalXML(d *xml.Decoder, start xml.StartElement) err
 
 		switch element := token.(type) {
 		case xml.StartElement:
-			m.UnmarshalXMLStartElement(element, &data)
+			t.UnmarshalXMLStartElement(element, &task)
 		case xml.EndElement:
-			m.UnmarshalXMLEndElement(element, &data)
+			t.UnmarshalXMLEndElement(element, &task)
 		}
 	}
 
 	return nil
 }
 
-func readRunningProcess(r io.Reader) ([]HostMetaData, error) {
+func readProcess(r io.Reader) ([]Task, error) {
 	content, err := ioutil.ReadAll(r)
 
 	if err != nil {
 		return nil, err
 	}
 
-	metadatas := HostMetaDatas{
-		Data: make([]HostMetaData, 0, 1024),
-	}
+	var tasks Tasks = make([]Task, 0, 1024)
 
-	if err = xml.Unmarshal(content, &metadatas); err != nil {
+	if err = xml.Unmarshal(content, &tasks); err != nil {
 		return nil, err
 	}
 
-	return metadatas.Data, nil
+	return tasks, nil
 }
 
 // ReadProcess returns the running processes mentioned in a diagnostic package.
-func ReadProcess() ([]HostMetaData, error) {
+func ReadProcess() ([]Task, error) {
 	name := filepath.Join("Agent/RunningProcesses.xml")
 	file, err := os.Open(name)
 
@@ -137,5 +133,5 @@ func ReadProcess() ([]HostMetaData, error) {
 
 	defer file.Close()
 
-	return readRunningProcess(file)
+	return readProcess(file)
 }
