@@ -4,17 +4,48 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic"
 	"github.com/jonas-fan/dsdd/pkg/fmtutil"
 	"github.com/spf13/cobra"
 )
 
+func sieve(data *diagnostic.HostMetaData, filters []string) bool {
+	for _, each := range filters {
+		switch {
+		case data.PID == each:
+			return true
+		case data.User == each:
+			return true
+		case data.Process == each:
+			return true
+		case strings.HasSuffix(data.Path, each):
+			return true
+		}
+	}
+
+	return false
+}
+
 func run(cmd *cobra.Command, args []string) {
 	proc, err := diagnostic.ReadProcess()
 
 	if err != nil {
 		panic(err)
+	}
+
+	if len(args) > 0 {
+		size := 0
+
+		for i := 0; i < len(proc); i++ {
+			if sieve(&proc[i], args) {
+				proc[size] = proc[i]
+				size++
+			}
+		}
+
+		proc = proc[:size]
 	}
 
 	sort.Slice(proc, func(lhs int, rhs int) bool {
