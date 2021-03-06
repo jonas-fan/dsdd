@@ -1,4 +1,4 @@
-package process
+package ps
 
 import (
 	"fmt"
@@ -69,8 +69,8 @@ func run(cmd *cobra.Command, args []string) {
 
 func NewCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "process",
-		Short: "Display running process",
+		Use:   "ps",
+		Short: "List running processes",
 		Run:   run,
 	}
 
