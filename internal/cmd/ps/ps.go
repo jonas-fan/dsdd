@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var details bool
+
 func sieve(task *diagnostic.Task, filters []string) bool {
 	for _, each := range filters {
 		switch {
@@ -56,12 +58,23 @@ func run(cmd *cobra.Command, args []string) {
 	})
 
 	formatter := fmtutil.NewFormatter()
-	formatter.Write("USER", "PID", "PPID", "COMMAND")
-	formatter.Align(1, fmtutil.RightAlign)
-	formatter.Align(2, fmtutil.RightAlign)
 
-	for _, each := range proc {
-		formatter.Write(each.User, each.PID, each.PPID, each.CommandLine)
+	if details {
+		formatter.Write("USER", "PID", "PPID", "NAME", "PATH", "COMMAND")
+		formatter.Align(1, fmtutil.RightAlign)
+		formatter.Align(2, fmtutil.RightAlign)
+
+		for _, each := range proc {
+			formatter.Write(each.User, each.PID, each.PPID, each.Name, each.Path, each.CommandLine)
+		}
+	} else {
+		formatter.Write("USER", "PID", "PPID", "COMMAND")
+		formatter.Align(1, fmtutil.RightAlign)
+		formatter.Align(2, fmtutil.RightAlign)
+
+		for _, each := range proc {
+			formatter.Write(each.User, each.PID, each.PPID, each.CommandLine)
+		}
 	}
 
 	fmt.Println(formatter.String())
@@ -76,6 +89,7 @@ func NewCommand() *cobra.Command {
 
 	flags := command.Flags()
 	flags.SetInterspersed(false)
+	flags.BoolVarP(&details, "details", "d", false, "Show details")
 
 	return command
 }
