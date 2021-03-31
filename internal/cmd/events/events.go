@@ -19,7 +19,7 @@ func run(cmd *cobra.Command, args []string) {
 
 func NewCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "event",
+		Use:   "events",
 		Short: "Display various events",
 		Run:   run,
 	}
