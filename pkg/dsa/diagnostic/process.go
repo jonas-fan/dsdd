@@ -51,7 +51,7 @@ func (m *Task) Tidy() {
 	}
 }
 
-func (t *Tasks) UnmarshalXMLStartElement(start xml.StartElement, task *Task) {
+func (t *Tasks) UnmarshalXMLStartElement(task *Task, start xml.StartElement) {
 	switch start.Name.Local {
 	case "HostMetaData":
 		for _, attr := range start.Attr {
@@ -74,7 +74,7 @@ func (t *Tasks) UnmarshalXMLStartElement(start xml.StartElement, task *Task) {
 	}
 }
 
-func (t *Tasks) UnmarshalXMLEndElement(end xml.EndElement, task *Task) {
+func (t *Tasks) UnmarshalXMLEndElement(task *Task, end xml.EndElement) {
 	switch end.Name.Local {
 	case "HostMetaData":
 		task.Tidy()
@@ -84,7 +84,7 @@ func (t *Tasks) UnmarshalXMLEndElement(end xml.EndElement, task *Task) {
 }
 
 func (t *Tasks) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	var task Task
+	task := Task{}
 
 	for {
 		token, err := d.Token()
@@ -97,9 +97,9 @@ func (t *Tasks) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 
 		switch element := token.(type) {
 		case xml.StartElement:
-			t.UnmarshalXMLStartElement(element, &task)
+			t.UnmarshalXMLStartElement(&task, element)
 		case xml.EndElement:
-			t.UnmarshalXMLEndElement(element, &task)
+			t.UnmarshalXMLEndElement(&task, element)
 		}
 	}
 
@@ -122,10 +122,9 @@ func readProcess(r io.Reader) ([]Task, error) {
 	return tasks, nil
 }
 
-// ReadProcess returns the running processes mentioned in a diagnostic package.
-func ReadProcess() ([]Task, error) {
-	name := filepath.Join("Agent/RunningProcesses.xml")
-	file, err := os.Open(name)
+// ReadProcess returns the running processes mentioned from a location.
+func ReadProcessFrom(filename string) ([]Task, error) {
+	file, err := os.Open(filename)
 
 	if err != nil {
 		return nil, err
@@ -134,4 +133,9 @@ func ReadProcess() ([]Task, error) {
 	defer file.Close()
 
 	return readProcess(file)
+}
+
+// ReadProcess returns the running processes mentioned in a diagnostic package.
+func ReadProcess() ([]Task, error) {
+	return ReadProcessFrom(filepath.Join("Agent", "RunningProcesses.xml"))
 }

@@ -17,33 +17,33 @@ Event:  %v | %v
 %v
 `
 
-func serializeSystemEvent(e diagnostic.SystemEvent) string {
+func serializeSystemEvent(event diagnostic.SystemEvent) string {
 	var builder strings.Builder
 
 	fmt.Fprintf(
 		&builder,
 		eventFormat,
-		e.EventOrigin,
-		e.ActionBy,
-		e.Manager,
-		e.Target,
-		e.Time,
-		e.Level,
-		e.EventId,
-		e.Event,
-		pretty.Indent(e.Description))
+		event.EventOrigin,
+		event.ActionBy,
+		event.Manager,
+		event.Target,
+		event.Time,
+		event.Level,
+		event.EventId,
+		event.Event,
+		pretty.Indent(event.Description))
 
 	return builder.String()
 }
 
-func readSystemEvent() {
+func showSystemEvent() {
 	events, err := diagnostic.ReadSystemEvent()
 
 	if err != nil {
 		panic(err)
 	}
 
-	for _, event := range events {
-		fmt.Println(serializeSystemEvent(event))
+	for _, each := range events {
+		fmt.Println(serializeSystemEvent(each))
 	}
 }

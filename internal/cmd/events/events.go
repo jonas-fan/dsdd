@@ -11,7 +11,7 @@ var category string
 func run(cmd *cobra.Command, args []string) {
 	switch strings.ToLower(category) {
 	case "sys", "system":
-		readSystemEvent()
+		showSystemEvent()
 	default:
 		panic("Unknown category: " + category)
 	}
