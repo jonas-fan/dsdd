@@ -2,6 +2,8 @@ package events
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic"
@@ -37,13 +39,21 @@ func serializeSystemEvent(event diagnostic.SystemEvent) string {
 }
 
 func showSystemEvent() {
-	events, err := diagnostic.ReadSystemEvent()
+	file, err := os.Open(filepath.Join("Manager", "hostevents.csv"))
 
 	if err != nil {
 		panic(err)
 	}
 
-	for _, each := range events {
-		fmt.Println(serializeSystemEvent(each))
+	defer file.Close()
+
+	events, err := diagnostic.ReadSystemEvent(file)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for i := len(events) - 1; i >= 0; i-- {
+		fmt.Println(serializeSystemEvent(events[i]))
 	}
 }

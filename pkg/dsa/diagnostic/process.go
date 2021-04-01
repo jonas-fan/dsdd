@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -106,8 +104,9 @@ func (t *Tasks) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return nil
 }
 
-func readProcess(r io.Reader) ([]Task, error) {
-	content, err := ioutil.ReadAll(r)
+// ReadProcess returns the running processes from a reader.
+func ReadProcess(reader io.Reader) ([]Task, error) {
+	content, err := ioutil.ReadAll(reader)
 
 	if err != nil {
 		return nil, err
@@ -120,22 +119,4 @@ func readProcess(r io.Reader) ([]Task, error) {
 	}
 
 	return tasks, nil
-}
-
-// ReadProcess returns the running processes mentioned from a location.
-func ReadProcessFrom(filename string) ([]Task, error) {
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
-	return readProcess(file)
-}
-
-// ReadProcess returns the running processes mentioned in a diagnostic package.
-func ReadProcess() ([]Task, error) {
-	return ReadProcessFrom(filepath.Join("Agent", "RunningProcesses.xml"))
 }

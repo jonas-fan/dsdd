@@ -2,6 +2,8 @@ package ps
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,7 +33,15 @@ func sieve(task *diagnostic.Task, filters []string) bool {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	proc, err := diagnostic.ReadProcess()
+	file, err := os.Open(filepath.Join("Agent", "RunningProcesses.xml"))
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+
+	tasks, err := diagnostic.ReadProcess(file)
 
 	if err != nil {
 		panic(err)
@@ -40,19 +50,19 @@ func run(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		size := 0
 
-		for i := 0; i < len(proc); i++ {
-			if sieve(&proc[i], args) {
-				proc[size] = proc[i]
+		for i := 0; i < len(tasks); i++ {
+			if sieve(&tasks[i], args) {
+				tasks[size] = tasks[i]
 				size++
 			}
 		}
 
-		proc = proc[:size]
+		tasks = tasks[:size]
 	}
 
-	sort.Slice(proc, func(lhs int, rhs int) bool {
-		lhsPID, _ := strconv.Atoi(proc[lhs].PID)
-		rhsPID, _ := strconv.Atoi(proc[rhs].PID)
+	sort.Slice(tasks, func(lhs int, rhs int) bool {
+		lhsPID, _ := strconv.Atoi(tasks[lhs].PID)
+		rhsPID, _ := strconv.Atoi(tasks[rhs].PID)
 
 		return lhsPID < rhsPID
 	})
@@ -64,7 +74,7 @@ func run(cmd *cobra.Command, args []string) {
 		formatter.Align(1, fmtutil.RightAlign)
 		formatter.Align(2, fmtutil.RightAlign)
 
-		for _, each := range proc {
+		for _, each := range tasks {
 			formatter.Write(each.User, each.PID, each.PPID, each.Name, each.Path, each.CommandLine)
 		}
 	} else {
@@ -72,7 +82,7 @@ func run(cmd *cobra.Command, args []string) {
 		formatter.Align(1, fmtutil.RightAlign)
 		formatter.Align(2, fmtutil.RightAlign)
 
-		for _, each := range proc {
+		for _, each := range tasks {
 			formatter.Write(each.User, each.PID, each.PPID, each.CommandLine)
 		}
 	}

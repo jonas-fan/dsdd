@@ -56,7 +56,7 @@ func (f *Formatter) Write(args ...string) {
 		f.width = make([]int, len(args))
 		f.align = make([]Align, len(args))
 	} else if len(f.width) != len(args) {
-		panic("Unexpected number of arguments")
+		panic("unexpected number of arguments")
 	}
 
 	for index, arg := range args {

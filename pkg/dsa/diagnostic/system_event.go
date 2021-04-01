@@ -2,8 +2,7 @@ package diagnostic
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
+	"io"
 	"strings"
 
 	"github.com/jonas-fan/dsdd/pkg/encoding/csv"
@@ -55,27 +54,15 @@ func (e *SystemEvent) Assign(keys []string, values []string) {
 	}
 }
 
-// ReadSystemEventFrom returns the system events from a location.
-func ReadSystemEventFrom(filename string) ([]SystemEvent, error) {
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
+// ReadSystemEvent returns the system events from a reader.
+func ReadSystemEvent(reader io.Reader) ([]SystemEvent, error) {
+	var err error
 
 	events := []SystemEvent{}
 
-	if err = csv.ReadAll(file, &events); err != nil {
+	if err = csv.ReadAll(reader, &events); err != nil {
 		return nil, err
 	}
 
 	return events, nil
-}
-
-// ReadSystemEvent returns the system events mentioned in a diagnostic package.
-// The default location is `Manager/hostevents.csv`.
-func ReadSystemEvent() ([]SystemEvent, error) {
-	return ReadSystemEventFrom(filepath.Join("Manager", "hostevents.csv"))
 }

@@ -13,7 +13,7 @@ func run(cmd *cobra.Command, args []string) {
 	case "sys", "system":
 		showSystemEvent()
 	default:
-		panic("Unknown category: " + category)
+		panic("unknown category: " + category)
 	}
 }
 
