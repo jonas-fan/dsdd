@@ -93,7 +93,7 @@ func NewCommand() *cobra.Command {
 	}
 
 	flags := command.Flags()
-	flags.SetInterspersed(false)
+	flags.SetInterspersed(true)
 	flags.BoolVarP(&details, "details", "d", false, "Show details")
 
 	return command
