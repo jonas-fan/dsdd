@@ -36,9 +36,9 @@ func sieve(tasks []diagnostic.Task, filters []string) <-chan *diagnostic.Task {
 	go func() {
 		fastpath := (len(filters) == 0)
 
-		for _, each := range tasks {
-			if fastpath || shake(&each, filters) {
-				out <- &each
+		for i := range tasks {
+			if fastpath || shake(&tasks[i], filters) {
+				out <- &tasks[i]
 			}
 		}
 
