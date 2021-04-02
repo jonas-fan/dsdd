@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic"
@@ -15,7 +13,7 @@ import (
 
 var details bool
 
-func sieve(task *diagnostic.Task, filters []string) bool {
+func shake(task *diagnostic.Task, filters []string) bool {
 	for _, each := range filters {
 		switch {
 		case task.PID == each:
@@ -30,6 +28,24 @@ func sieve(task *diagnostic.Task, filters []string) bool {
 	}
 
 	return false
+}
+
+func sieve(tasks []diagnostic.Task, filters []string) <-chan *diagnostic.Task {
+	out := make(chan *diagnostic.Task)
+
+	go func() {
+		fastpath := (len(filters) == 0)
+
+		for _, each := range tasks {
+			if fastpath || shake(&each, filters) {
+				out <- &each
+			}
+		}
+
+		close(out)
+	}()
+
+	return out
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -47,42 +63,21 @@ func run(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	if len(args) > 0 {
-		size := 0
-
-		for i := 0; i < len(tasks); i++ {
-			if sieve(&tasks[i], args) {
-				tasks[size] = tasks[i]
-				size++
-			}
-		}
-
-		tasks = tasks[:size]
-	}
-
-	sort.Slice(tasks, func(lhs int, rhs int) bool {
-		lhsPID, _ := strconv.Atoi(tasks[lhs].PID)
-		rhsPID, _ := strconv.Atoi(tasks[rhs].PID)
-
-		return lhsPID < rhsPID
-	})
-
 	formatter := fmtutil.NewFormatter()
 
 	if details {
 		formatter.Write("USER", "PID", "PPID", "NAME", "PATH", "COMMAND")
-		formatter.Align(1, fmtutil.RightAlign)
-		formatter.Align(2, fmtutil.RightAlign)
-
-		for _, each := range tasks {
-			formatter.Write(each.User, each.PID, each.PPID, each.Name, each.Path, each.CommandLine)
-		}
 	} else {
 		formatter.Write("USER", "PID", "PPID", "COMMAND")
-		formatter.Align(1, fmtutil.RightAlign)
-		formatter.Align(2, fmtutil.RightAlign)
+	}
 
-		for _, each := range tasks {
+	formatter.Align(1, fmtutil.RightAlign)
+	formatter.Align(2, fmtutil.RightAlign)
+
+	for each := range sieve(tasks, args) {
+		if details {
+			formatter.Write(each.User, each.PID, each.PPID, each.Name, each.Path, each.CommandLine)
+		} else {
 			formatter.Write(each.User, each.PID, each.PPID, each.CommandLine)
 		}
 	}

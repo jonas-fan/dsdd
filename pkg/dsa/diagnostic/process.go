@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -20,40 +22,58 @@ type Task struct {
 
 type Tasks []Task
 
-func (m *Task) Assign(name string, value string) {
+func (t *Task) assign(name string, value string) {
 	switch strings.ToLower(name) {
 	case "identifier":
-		m.PID = value
+		t.PID = value
 	case "parent":
-		m.PPID = value
+		t.PPID = value
 	case "user":
-		m.User = value
+		t.User = value
 	case "userid":
-		m.UserID = value
+		t.UserID = value
 	case "path":
-		m.Path = value
+		t.Path = value
 	case "commandline":
-		m.CommandLine = value
+		t.CommandLine = value
 	case "process":
-		m.Name = value
+		t.Name = value
 	}
 }
 
-func (m *Task) Tidy() {
-	if m.CommandLine == "" {
-		m.CommandLine = fmt.Sprintf("[%s]", m.Name)
+func (t *Task) done() {
+	if t.CommandLine == "" {
+		t.CommandLine = fmt.Sprintf("[%s]", t.Name)
 	}
 
-	if m.Path == "" {
-		m.Path = m.CommandLine
+	if t.Path == "" {
+		t.Path = t.CommandLine
 	}
 }
 
-func (t *Tasks) UnmarshalXMLStartElement(task *Task, start xml.StartElement) {
+func (s *Tasks) extend() {
+	*s = append(*s, Task{})
+}
+
+func (s *Tasks) shrink() {
+	*s = (*s)[:len(*s)-1]
+}
+
+func (s *Tasks) last() *Task {
+	if len(*s) == 0 {
+		return nil
+	}
+
+	return &(*s)[len(*s)-1]
+}
+
+func (s *Tasks) UnmarshalXMLStartElement(start xml.StartElement) {
+	task := s.last()
+
 	switch start.Name.Local {
 	case "HostMetaData":
 		for _, attr := range start.Attr {
-			task.Assign(attr.Name.Local, attr.Value)
+			task.assign(attr.Name.Local, attr.Value)
 		}
 	case "Attribute":
 		var name string
@@ -68,24 +88,25 @@ func (t *Tasks) UnmarshalXMLStartElement(task *Task, start xml.StartElement) {
 			}
 		}
 
-		task.Assign(name, value)
+		task.assign(name, value)
 	}
 }
 
-func (t *Tasks) UnmarshalXMLEndElement(task *Task, end xml.EndElement) {
+func (s *Tasks) UnmarshalXMLEndElement(end xml.EndElement) {
+	task := s.last()
+
 	switch end.Name.Local {
 	case "HostMetaData":
-		task.Tidy()
-		*t = append(*t, *task)
-		*task = Task{}
+		task.done()
+		s.extend()
 	}
 }
 
-func (t *Tasks) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	task := Task{}
+func (s *Tasks) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	s.extend()
 
 	for {
-		token, err := d.Token()
+		token, err := decoder.Token()
 
 		if err == io.EOF {
 			break
@@ -95,11 +116,13 @@ func (t *Tasks) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 
 		switch element := token.(type) {
 		case xml.StartElement:
-			t.UnmarshalXMLStartElement(&task, element)
+			s.UnmarshalXMLStartElement(element)
 		case xml.EndElement:
-			t.UnmarshalXMLEndElement(&task, element)
+			s.UnmarshalXMLEndElement(element)
 		}
 	}
+
+	s.shrink()
 
 	return nil
 }
@@ -117,6 +140,13 @@ func ReadProcess(reader io.Reader) ([]Task, error) {
 	if err = xml.Unmarshal(content, &tasks); err != nil {
 		return nil, err
 	}
+
+	sort.Slice(tasks, func(lhs int, rhs int) bool {
+		lhsPID, _ := strconv.Atoi(tasks[lhs].PID)
+		rhsPID, _ := strconv.Atoi(tasks[rhs].PID)
+
+		return lhsPID < rhsPID
+	})
 
 	return tasks, nil
 }
