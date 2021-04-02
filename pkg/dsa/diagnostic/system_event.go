@@ -21,9 +21,7 @@ type SystemEvent struct {
 }
 
 func (e *SystemEvent) assign(key string, value string) {
-	field := strings.ToLower(key)
-
-	switch field {
+	switch strings.ToLower(key) {
 	case "action by":
 		e.ActionBy = value
 	case "description":
@@ -41,7 +39,7 @@ func (e *SystemEvent) assign(key string, value string) {
 	case "target":
 		e.Target = value
 	case "time":
-		e.Time = fmt.Sprint(toTime(value))
+		e.Time = fmt.Sprint(toTime(value).Format("2006-01-02 15:04:05"))
 	default:
 		// don't bother about these
 	}
@@ -56,11 +54,9 @@ func (e *SystemEvent) Assign(keys []string, values []string) {
 
 // ReadSystemEvent returns the system events from a reader.
 func ReadSystemEvent(reader io.Reader) ([]SystemEvent, error) {
-	var err error
-
 	events := []SystemEvent{}
 
-	if err = csv.ReadAll(reader, &events); err != nil {
+	if err := csv.ReadAll(reader, &events); err != nil {
 		return nil, err
 	}
 

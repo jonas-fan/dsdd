@@ -7,6 +7,7 @@ import (
 )
 
 var category string
+var summarized bool
 
 func run(cmd *cobra.Command, args []string) {
 	switch strings.ToLower(category) {
@@ -27,6 +28,7 @@ func NewCommand() *cobra.Command {
 	flags := command.Flags()
 	flags.SetInterspersed(false)
 	flags.StringVarP(&category, "category", "c", "system", "Event category")
+	flags.BoolVarP(&summarized, "oneline", "", false, "Show information on the same line")
 
 	return command
 }
