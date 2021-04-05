@@ -2,12 +2,9 @@ package system
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event"
-	"github.com/jonas-fan/dsdd/pkg/encoding/csv"
 	"github.com/jonas-fan/dsdd/pkg/pretty"
 )
 
@@ -22,8 +19,6 @@ type SystemEvent struct {
 	Target      string
 	Time        string
 }
-
-var Header = []string{"TIME", "ORIGIN", "LEVEL", "EID", "EVENT"}
 
 const eventFormat = `Origin: %v <%v@%v>
 Target: %v
@@ -59,13 +54,6 @@ func (e *SystemEvent) assign(key string, value string) {
 	}
 }
 
-// Assign implements `csv.Assigner` and helps with SystemEvent initialization.
-func (e *SystemEvent) Assign(keys []string, values []string) {
-	for index, key := range keys {
-		e.assign(key, values[index])
-	}
-}
-
 // String implements the `event.Event` interface.
 func (e *SystemEvent) String() string {
 	return fmt.Sprintf(eventFormat,
@@ -80,37 +68,12 @@ func (e *SystemEvent) String() string {
 		pretty.Indent(e.Description))
 }
 
-// Column implements the `event.Event` interface.
-func (e *SystemEvent) Column() []string {
-	return []string{e.Time, e.EventOrigin, e.Level, e.EventId, e.Event}
-}
+func Parse(header []string, fields []string) event.Event {
+	e := &SystemEvent{}
 
-// ReadSystemEvent returns the system events from a reader.
-func ReadSystemEvent(reader io.Reader) ([]event.Event, error) {
-	events := []SystemEvent{}
-
-	if err := csv.ReadAll(reader, &events); err != nil {
-		return nil, err
+	for i := range header {
+		e.assign(header[i], fields[i])
 	}
 
-	out := make([]event.Event, len(events))
-
-	for i := range events {
-		out[i] = &events[i]
-	}
-
-	return out, nil
-}
-
-// ReadSystemEventFrom returns the system events from a file.
-func ReadSystemEventFrom(filename string) ([]event.Event, error) {
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
-	return ReadSystemEvent(file)
+	return e
 }

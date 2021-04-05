@@ -1,9 +1,9 @@
 package events
 
 import (
+	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -14,53 +14,82 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var category string
+var kind string
 var oneline bool
 
-func writeEvents(writer io.Writer, events []event.Event) {
-	for i := len(events) - 1; i >= 0; i-- {
-		fmt.Fprintln(writer, events[i].String())
+func newViewer(kind string, events []event.Event) (event.TableViewer, error) {
+	switch strings.ToLower(kind) {
+	case "sys", "system":
+		return system.NewTableViewer(events), nil
+	case "am", "antimalware":
+		return antimalware.NewTableViewer(events), nil
+	default:
+		return nil, errors.New("unknown type: " + kind)
 	}
 }
 
-func writeOnelineEvents(writer io.Writer, header []string, events []event.Event) {
-	formatter := fmtutil.NewFormatter()
+func newReader(kind string) (*event.Reader, error) {
+	var filename string
+	var parser event.Parser
 
-	formatter.Write(header...)
-
-	for i := len(events) - 1; i >= 0; i-- {
-		tokens := events[i].Column()
-
-		formatter.Write(tokens...)
+	switch strings.ToLower(kind) {
+	case "sys", "system":
+		filename, parser = filepath.Join("Manager", "hostevents.csv"), system.Parse
+	case "am", "antimalware":
+		filename, parser = filepath.Join("Manager", "antimalwareevents.csv"), antimalware.Parse
+	default:
+		return nil, errors.New("unknown type: " + kind)
 	}
 
-	fmt.Fprintln(writer, formatter.String())
+	return event.Open(filename, parser)
 }
 
 func run(cmd *cobra.Command, args []string) {
-	var header []string
-	var events []event.Event
-	var err error
-
-	switch strings.ToLower(category) {
-	case "sys", "system":
-		header = system.Header
-		events, err = system.ReadSystemEventFrom(filepath.Join("Manager", "hostevents.csv"))
-	case "am", "antimalware":
-		header = antimalware.Header
-		events, err = antimalware.ReadAntiMalwareEventFrom(filepath.Join("Manager", "antimalwareevents.csv"))
-	default:
-		panic("unknown category: " + category)
-	}
+	reader, err := newReader(kind)
 
 	if err != nil {
 		panic(err)
 	}
 
+	defer reader.Close()
+
+	events := make([]event.Event, 0)
+
+	for {
+		event, err := reader.Read()
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		events = append(events, event)
+	}
+
 	if oneline {
-		writeOnelineEvents(os.Stdout, header, events)
+		viewer, err := newViewer(kind, events)
+
+		if err != nil {
+			panic(err)
+		}
+
+		columns := viewer.Header()
+
+		formatter := fmtutil.NewFormatter()
+		formatter.Write(columns...)
+
+		for viewer.HasNext() {
+			columns := viewer.Next()
+
+			formatter.Write(columns...)
+		}
+
+		fmt.Println(formatter.String())
 	} else {
-		writeEvents(os.Stdout, events)
+		for _, each := range events {
+			fmt.Println(each.String())
+		}
 	}
 }
 
@@ -73,7 +102,7 @@ func NewCommand() *cobra.Command {
 
 	flags := command.Flags()
 	flags.SetInterspersed(false)
-	flags.StringVarP(&category, "category", "c", "system", "Event category")
+	flags.StringVarP(&kind, "kind", "k", "system", "Event type")
 	flags.BoolVarP(&oneline, "oneline", "", false, "Show information on the same line")
 
 	return command
