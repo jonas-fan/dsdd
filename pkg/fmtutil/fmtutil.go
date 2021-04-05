@@ -82,6 +82,12 @@ func (f *Formatter) String() string {
 	return strings.Join(lines, "\n")
 }
 
-func NewFormatter() *Formatter {
-	return &Formatter{}
+func NewFormatter(args ...string) *Formatter {
+	formatter := &Formatter{}
+
+	if len(args) > 0 {
+		formatter.Write(args...)
+	}
+
+	return formatter
 }

@@ -17,15 +17,19 @@ import (
 var kind string
 var oneline bool
 
-func newViewer(kind string, events []event.Event) (event.TableViewer, error) {
+func newTableViewer(kind string, events []event.Event) (*event.TableViewer, error) {
+	var layout event.TableLayout
+
 	switch strings.ToLower(kind) {
 	case "sys", "system":
-		return system.NewTableViewer(events), nil
+		layout = system.NewTableLayout()
 	case "am", "antimalware":
-		return antimalware.NewTableViewer(events), nil
+		layout = antimalware.NewTableLayout()
 	default:
 		return nil, errors.New("unknown type: " + kind)
 	}
+
+	return event.NewTableViewer(layout, events), nil
 }
 
 func newReader(kind string) (*event.Reader, error) {
@@ -68,16 +72,14 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	if oneline {
-		viewer, err := newViewer(kind, events)
+		viewer, err := newTableViewer(kind, events)
 
 		if err != nil {
 			panic(err)
 		}
 
 		columns := viewer.Header()
-
-		formatter := fmtutil.NewFormatter()
-		formatter.Write(columns...)
+		formatter := fmtutil.NewFormatter(columns...)
 
 		for viewer.HasNext() {
 			columns := viewer.Next()
