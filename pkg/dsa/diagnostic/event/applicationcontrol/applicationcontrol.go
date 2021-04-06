@@ -1,4 +1,4 @@
-package antimalware
+package applicationcontrol
 
 import (
 	"fmt"
@@ -8,26 +8,30 @@ import (
 	"github.com/jonas-fan/dsdd/pkg/pretty"
 )
 
-type AntiMalwareEvent struct {
+type ApplicationControlEvent struct {
 	Time        string
 	EventOrigin string
 	Computer    string
-	ScanType    string
+	Ruleset     string
 	Reason      string
-	VirusType   string
-	Malware     string
+	Event       string
+	RepeatCount string
 	Action      string
-	Infection   string
+	Path        string
+	File        string
 	Md5         string
 	Sha1        string
 	Sha256      string
+	UserName    string
+	ProcessName string
 }
 
-const eventFormat = `Origin:  %v <%v>
-Time:    %v
-Reason:  %v | %v
-Malware: %v | %v
-Action:  %v
+const eventFormat = `Origin: %v <%v>
+Time:   %v
+Reason: %v | %v
+Event:  %v
+By:     %v | %v
+Action: %v
 
 %v
 
@@ -36,7 +40,7 @@ Action:  %v
 %v
 `
 
-func (e *AntiMalwareEvent) assign(key string, value string) {
+func (e *ApplicationControlEvent) assign(key string, value string) {
 	switch strings.ToLower(key) {
 	case "time":
 		e.Time = fmt.Sprint(event.ToTime(value).Format("2006-01-02 15:04:05"))
@@ -44,62 +48,69 @@ func (e *AntiMalwareEvent) assign(key string, value string) {
 		e.EventOrigin = value
 	case "computer":
 		e.Computer = value
-	case "scan type":
-		e.ScanType = value
+	case "ruleset":
+		e.Ruleset = value
 	case "reason":
 		e.Reason = value
-	case "major virus type":
-		e.VirusType = value
-	case "malware":
-		e.Malware = value
-	case "action taken":
+	case "event":
+		e.Event = value
+	case "repeat count":
+		e.RepeatCount = value
+	case "action":
 		e.Action = value
-	case "infected file(s)":
-		e.Infection = value
-	case "file md5":
+	case "path":
+		e.Path = value
+	case "file":
+		e.File = value
+	case "md5":
 		if value == "" {
 			value = "n/a"
 		}
 		e.Md5 = strings.ToLower(value)
-	case "file sha-1":
+	case "sha1":
 		if value == "" {
 			value = "n/a"
 		}
 		e.Sha1 = strings.ToLower(value)
-	case "file sha-256":
+	case "sha256":
 		if value == "" {
 			value = "n/a"
 		}
 		e.Sha256 = strings.ToLower(value)
+	case "user name":
+		e.UserName = value
+	case "process name":
+		e.ProcessName = value
 	default:
 		// don't bother about these
 	}
 }
 
 // Time implements the `event.Event` interface.
-func (e *AntiMalwareEvent) Datetime() string {
+func (e *ApplicationControlEvent) Datetime() string {
 	return e.Time
 }
 
 // String implements the `event.Event` interface.
-func (e *AntiMalwareEvent) String() string {
+func (e *ApplicationControlEvent) String() string {
 	return fmt.Sprintf(eventFormat,
 		e.EventOrigin,
 		e.Computer,
 		e.Time,
 		e.Reason,
-		e.ScanType,
-		e.VirusType,
-		e.Malware,
+		e.Ruleset,
+		e.Event,
+		e.UserName,
+		e.ProcessName,
 		e.Action,
-		pretty.Indent(e.Infection),
+		pretty.Indent(e.Path+e.File),
 		pretty.Indent("md5:"+e.Md5),
 		pretty.Indent("sha1:"+e.Sha1),
 		pretty.Indent("sha256:"+e.Sha256))
 }
 
 func Parse(header []string, fields []string) event.Event {
-	e := &AntiMalwareEvent{}
+	e := &ApplicationControlEvent{}
 
 	for i := range header {
 		e.assign(header[i], fields[i])

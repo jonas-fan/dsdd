@@ -54,6 +54,11 @@ func (e *SystemEvent) assign(key string, value string) {
 	}
 }
 
+// Time implements the `event.Event` interface.
+func (e *SystemEvent) Datetime() string {
+	return e.Time
+}
+
 // String implements the `event.Event` interface.
 func (e *SystemEvent) String() string {
 	return fmt.Sprintf(eventFormat,

@@ -1,8 +1,6 @@
-package antimalware
+package integritymonitoring
 
 import (
-	"fmt"
-
 	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event"
 )
 
@@ -15,14 +13,13 @@ func (v *TableLayout) Header() []string {
 }
 
 func (v *TableLayout) Columns(event event.Event) []string {
-	e := event.(*AntiMalwareEvent)
-	malware := fmt.Sprintf("%s:%s", e.VirusType, e.Malware)
+	e := event.(*IntegrityMonitoringEvent)
 
-	return []string{e.Time, e.Reason, e.ScanType, malware, e.Action, e.Infection}
+	return []string{e.Time, e.Reason, e.Change, e.Process, e.Type, e.Key}
 }
 
 func NewTableLayout() event.TableLayout {
 	return &TableLayout{
-		header: []string{"TIME", "REASON", "BY", "MALWARE", "ACTION", "PATH"},
+		header: []string{"TIME", "REASON", "CHANGE", "BY", "TYPE", "KEY"},
 	}
 }

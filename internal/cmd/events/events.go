@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event"
 	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event/antimalware"
+	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event/applicationcontrol"
+	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event/integritymonitoring"
 	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event/system"
 	"github.com/jonas-fan/dsdd/pkg/fmtutil"
 	"github.com/spf13/cobra"
@@ -25,6 +28,10 @@ func newTableViewer(kind string, events []event.Event) (*event.TableViewer, erro
 		layout = system.NewTableLayout()
 	case "am", "antimalware":
 		layout = antimalware.NewTableLayout()
+	case "ac", "appcontrol", "applicationcontrol":
+		layout = applicationcontrol.NewTableLayout()
+	case "im", "integritymonitoring":
+		layout = integritymonitoring.NewTableLayout()
 	default:
 		return nil, errors.New("unknown type: " + kind)
 	}
@@ -41,6 +48,10 @@ func newReader(kind string) (*event.Reader, error) {
 		filename, parser = filepath.Join("Manager", "hostevents.csv"), system.Parse
 	case "am", "antimalware":
 		filename, parser = filepath.Join("Manager", "antimalwareevents.csv"), antimalware.Parse
+	case "ac", "appcontrol", "applicationcontrol":
+		filename, parser = filepath.Join("Manager", "appcontrolevents.csv"), applicationcontrol.Parse
+	case "im", "integritymonitoring":
+		filename, parser = filepath.Join("Manager", "integrityevents.csv"), integritymonitoring.Parse
 	default:
 		return nil, errors.New("unknown type: " + kind)
 	}
@@ -70,6 +81,10 @@ func run(cmd *cobra.Command, args []string) {
 
 		events = append(events, event)
 	}
+
+	sort.SliceStable(events, func(lhs int, rhs int) bool {
+		return events[lhs].Datetime() > events[rhs].Datetime()
+	})
 
 	if oneline {
 		viewer, err := newTableViewer(kind, events)

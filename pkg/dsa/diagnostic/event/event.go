@@ -6,6 +6,7 @@ import (
 )
 
 type Event interface {
+	Datetime() string
 	String() string
 }
 
