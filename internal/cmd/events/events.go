@@ -18,7 +18,17 @@ import (
 )
 
 var kind string
-var oneline bool
+var details bool
+
+func contains(slice []string, value string) bool {
+	for _, each := range slice {
+		if each == value {
+			return true
+		}
+	}
+
+	return false
+}
 
 func newTableViewer(kind string, events []event.Event) (*event.TableViewer, error) {
 	var layout event.TableLayout
@@ -41,22 +51,22 @@ func newTableViewer(kind string, events []event.Event) (*event.TableViewer, erro
 
 func newReader(kind string) (*event.Reader, error) {
 	var filename string
-	var parser event.Parser
+	var builder event.EventBuilder
 
 	switch strings.ToLower(kind) {
 	case "sys", "system":
-		filename, parser = filepath.Join("Manager", "hostevents.csv"), system.Parse
+		filename, builder = filepath.Join("Manager", "hostevents.csv"), system.New
 	case "am", "antimalware":
-		filename, parser = filepath.Join("Manager", "antimalwareevents.csv"), antimalware.Parse
+		filename, builder = filepath.Join("Manager", "antimalwareevents.csv"), antimalware.New
 	case "ac", "appcontrol", "applicationcontrol":
-		filename, parser = filepath.Join("Manager", "appcontrolevents.csv"), applicationcontrol.Parse
-	case "im", "integritymonitoring":
-		filename, parser = filepath.Join("Manager", "integrityevents.csv"), integritymonitoring.Parse
+		filename, builder = filepath.Join("Manager", "appcontrolevents.csv"), applicationcontrol.New
+	case "im", "integrity", "integritymonitoring":
+		filename, builder = filepath.Join("Manager", "integrityevents.csv"), integritymonitoring.New
 	default:
 		return nil, errors.New("unknown type: " + kind)
 	}
 
-	return event.Open(filename, parser)
+	return event.Open(filename, builder)
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -86,7 +96,11 @@ func run(cmd *cobra.Command, args []string) {
 		return events[lhs].Datetime() > events[rhs].Datetime()
 	})
 
-	if oneline {
+	if details {
+		for _, each := range events {
+			fmt.Println(each.String())
+		}
+	} else {
 		viewer, err := newTableViewer(kind, events)
 
 		if err != nil {
@@ -103,10 +117,6 @@ func run(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Println(formatter.String())
-	} else {
-		for _, each := range events {
-			fmt.Println(each.String())
-		}
 	}
 }
 
@@ -120,7 +130,7 @@ func NewCommand() *cobra.Command {
 	flags := command.Flags()
 	flags.SetInterspersed(false)
 	flags.StringVarP(&kind, "kind", "k", "system", "Event type")
-	flags.BoolVarP(&oneline, "oneline", "", false, "Show information on the same line")
+	flags.BoolVarP(&details, "details", "d", false, "Show details")
 
 	return command
 }

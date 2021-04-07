@@ -20,6 +20,6 @@ func (v *TableLayout) Columns(event event.Event) []string {
 
 func NewTableLayout() event.TableLayout {
 	return &TableLayout{
-		header: []string{"TIME", "ORIGIN", "LEVEL", "EID", "EVENT"},
+		header: []string{"TIME", "ORIGIN", "LEVEL", "EVENT ID", "EVENT"},
 	}
 }

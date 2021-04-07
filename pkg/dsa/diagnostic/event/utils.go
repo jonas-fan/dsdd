@@ -1,6 +1,7 @@
 package event
 
 import (
+	"strings"
 	"time"
 )
 
@@ -18,4 +19,13 @@ func ToTime(value string) time.Time {
 	}
 
 	return time.Time{}
+}
+
+// ToLowerOrNA converts a string to lowercase or n/a.
+func ToLowerOrNA(value string) string {
+	if value == "" {
+		return "n/a"
+	}
+
+	return strings.ToLower(value)
 }

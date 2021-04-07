@@ -26,7 +26,7 @@ type ApplicationControlEvent struct {
 	ProcessName string
 }
 
-const eventFormat = `Origin: %v <%v>
+const template = `Origin: %v <%v>
 Time:   %v
 Reason: %v | %v
 Event:  %v
@@ -40,7 +40,8 @@ Action: %v
 %v
 `
 
-func (e *ApplicationControlEvent) assign(key string, value string) {
+// Assign implements the `event.Event` interface.
+func (e *ApplicationControlEvent) Assign(key string, value string) {
 	switch strings.ToLower(key) {
 	case "time":
 		e.Time = fmt.Sprint(event.ToTime(value).Format("2006-01-02 15:04:05"))
@@ -63,20 +64,11 @@ func (e *ApplicationControlEvent) assign(key string, value string) {
 	case "file":
 		e.File = value
 	case "md5":
-		if value == "" {
-			value = "n/a"
-		}
-		e.Md5 = strings.ToLower(value)
+		e.Md5 = event.ToLowerOrNA(value)
 	case "sha1":
-		if value == "" {
-			value = "n/a"
-		}
-		e.Sha1 = strings.ToLower(value)
+		e.Sha1 = event.ToLowerOrNA(value)
 	case "sha256":
-		if value == "" {
-			value = "n/a"
-		}
-		e.Sha256 = strings.ToLower(value)
+		e.Sha256 = event.ToLowerOrNA(value)
 	case "user name":
 		e.UserName = value
 	case "process name":
@@ -86,14 +78,9 @@ func (e *ApplicationControlEvent) assign(key string, value string) {
 	}
 }
 
-// Time implements the `event.Event` interface.
-func (e *ApplicationControlEvent) Datetime() string {
-	return e.Time
-}
-
 // String implements the `event.Event` interface.
 func (e *ApplicationControlEvent) String() string {
-	return fmt.Sprintf(eventFormat,
+	return fmt.Sprintf(template,
 		e.EventOrigin,
 		e.Computer,
 		e.Time,
@@ -109,12 +96,12 @@ func (e *ApplicationControlEvent) String() string {
 		pretty.Indent("sha256:"+e.Sha256))
 }
 
-func Parse(header []string, fields []string) event.Event {
-	e := &ApplicationControlEvent{}
+// Datetime implements the `event.Event` interface.
+func (e *ApplicationControlEvent) Datetime() string {
+	return e.Time
+}
 
-	for i := range header {
-		e.assign(header[i], fields[i])
-	}
-
-	return e
+// New returns a new `event.Event`.
+func New() event.Event {
+	return &ApplicationControlEvent{}
 }

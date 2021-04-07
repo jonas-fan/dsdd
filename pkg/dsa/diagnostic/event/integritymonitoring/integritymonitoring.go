@@ -23,7 +23,7 @@ type IntegrityMonitoringEvent struct {
 	Process     string
 }
 
-const eventFormat = `Origin:   %v <%v>
+const template = `Origin:   %v <%v>
 Time:     %v
 Reason:   %v | %v
 Change:   %v | %v | %v
@@ -32,7 +32,8 @@ By:       %v | %v
 %v
 `
 
-func (e *IntegrityMonitoringEvent) assign(key string, value string) {
+// Assign implements the `event.Event` interface.
+func (e *IntegrityMonitoringEvent) Assign(key string, value string) {
 	switch strings.ToLower(key) {
 	case "time":
 		e.Time = fmt.Sprint(event.ToTime(value).Format("2006-01-02 15:04:05"))
@@ -63,14 +64,9 @@ func (e *IntegrityMonitoringEvent) assign(key string, value string) {
 	}
 }
 
-// Time implements the `event.Event` interface.
-func (e *IntegrityMonitoringEvent) Datetime() string {
-	return e.Time
-}
-
 // String implements the `event.Event` interface.
 func (e *IntegrityMonitoringEvent) String() string {
-	return fmt.Sprintf(eventFormat,
+	return fmt.Sprintf(template,
 		e.EventOrigin,
 		e.Computer,
 		e.Time,
@@ -84,12 +80,12 @@ func (e *IntegrityMonitoringEvent) String() string {
 		pretty.Indent(e.Description))
 }
 
-func Parse(header []string, fields []string) event.Event {
-	e := &IntegrityMonitoringEvent{}
+// Datetime implements the `event.Event` interface.
+func (e *IntegrityMonitoringEvent) Datetime() string {
+	return e.Time
+}
 
-	for i := range header {
-		e.assign(header[i], fields[i])
-	}
-
-	return e
+// New returns a new `event.Event`.
+func New() event.Event {
+	return &IntegrityMonitoringEvent{}
 }
