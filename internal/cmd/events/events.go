@@ -122,6 +122,15 @@ func run(cmd *cobra.Command, args []string) {
 	}
 }
 
+func validEventType() []string {
+	return []string{
+		system.Alias()[0],
+		antimalware.Alias()[0],
+		applicationcontrol.Alias()[0],
+		integritymonitoring.Alias()[0],
+	}
+}
+
 func NewCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "events",
@@ -129,9 +138,11 @@ func NewCommand() *cobra.Command {
 		Run:   run,
 	}
 
+	eventTypeDescription := fmt.Sprintf("Event type (e.g., \"%s\")", strings.Join(validEventType(), "\", \""))
+
 	flags := command.Flags()
 	flags.SetInterspersed(false)
-	flags.StringVarP(&kind, "kind", "k", "system", "Event type")
+	flags.StringVarP(&kind, "kind", "k", "system", eventTypeDescription)
 	flags.BoolVarP(&details, "details", "d", false, "Show details")
 
 	return command
