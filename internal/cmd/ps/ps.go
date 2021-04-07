@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic"
 	"github.com/jonas-fan/dsdd/pkg/fmtutil"
 	"github.com/spf13/cobra"
 )

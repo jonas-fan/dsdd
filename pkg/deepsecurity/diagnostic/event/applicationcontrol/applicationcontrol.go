@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event"
 	"github.com/jonas-fan/dsdd/pkg/pretty"
 )
 
@@ -104,4 +104,9 @@ func (e *ApplicationControlEvent) Datetime() string {
 // New returns a new `event.Event`.
 func New() event.Event {
 	return &ApplicationControlEvent{}
+}
+
+// Alias returns alias of this pacakge.
+func Alias() []string {
+	return []string{"applicationcontrol", "appcontrol", "ac"}
 }

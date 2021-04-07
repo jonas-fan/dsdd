@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event"
 	"github.com/jonas-fan/dsdd/pkg/pretty"
 )
 
@@ -77,4 +77,9 @@ func (e *SystemEvent) Datetime() string {
 // New returns a new `event.Event`.
 func New() event.Event {
 	return &SystemEvent{}
+}
+
+// Alias returns alias of this pacakge.
+func Alias() []string {
+	return []string{"system", "sys", "host"}
 }

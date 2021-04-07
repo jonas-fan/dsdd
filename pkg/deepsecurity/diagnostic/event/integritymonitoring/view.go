@@ -1,7 +1,7 @@
 package integritymonitoring
 
 import (
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event"
 )
 
 type TableLayout struct {

@@ -8,11 +8,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event"
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event/antimalware"
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event/applicationcontrol"
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event/integritymonitoring"
-	"github.com/jonas-fan/dsdd/pkg/dsa/diagnostic/event/system"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/antimalware"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/applicationcontrol"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/integritymonitoring"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/system"
 	"github.com/jonas-fan/dsdd/pkg/fmtutil"
 	"github.com/spf13/cobra"
 )
@@ -32,15 +32,16 @@ func contains(slice []string, value string) bool {
 
 func newTableViewer(kind string, events []event.Event) (*event.TableViewer, error) {
 	var layout event.TableLayout
+	var name = strings.ToLower(kind)
 
-	switch strings.ToLower(kind) {
-	case "sys", "system":
+	switch {
+	case contains(system.Alias(), name):
 		layout = system.NewTableLayout()
-	case "am", "antimalware":
+	case contains(antimalware.Alias(), name):
 		layout = antimalware.NewTableLayout()
-	case "ac", "appcontrol", "applicationcontrol":
+	case contains(applicationcontrol.Alias(), name):
 		layout = applicationcontrol.NewTableLayout()
-	case "im", "integritymonitoring":
+	case contains(integritymonitoring.Alias(), name):
 		layout = integritymonitoring.NewTableLayout()
 	default:
 		return nil, errors.New("unknown type: " + kind)
@@ -52,15 +53,16 @@ func newTableViewer(kind string, events []event.Event) (*event.TableViewer, erro
 func newReader(kind string) (*event.Reader, error) {
 	var filename string
 	var builder event.EventBuilder
+	var name = strings.ToLower(kind)
 
-	switch strings.ToLower(kind) {
-	case "sys", "system":
+	switch {
+	case contains(system.Alias(), name):
 		filename, builder = filepath.Join("Manager", "hostevents.csv"), system.New
-	case "am", "antimalware":
+	case contains(antimalware.Alias(), name):
 		filename, builder = filepath.Join("Manager", "antimalwareevents.csv"), antimalware.New
-	case "ac", "appcontrol", "applicationcontrol":
+	case contains(applicationcontrol.Alias(), name):
 		filename, builder = filepath.Join("Manager", "appcontrolevents.csv"), applicationcontrol.New
-	case "im", "integrity", "integritymonitoring":
+	case contains(integritymonitoring.Alias(), name):
 		filename, builder = filepath.Join("Manager", "integrityevents.csv"), integritymonitoring.New
 	default:
 		return nil, errors.New("unknown type: " + kind)
