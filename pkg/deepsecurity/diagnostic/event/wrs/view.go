@@ -1,8 +1,6 @@
-package applicationcontrol
+package wrs
 
 import (
-	"fmt"
-
 	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event"
 )
 
@@ -15,15 +13,13 @@ func (v *TableLayout) Header() []string {
 }
 
 func (v *TableLayout) Columns(event event.Event) []string {
-	e := event.(*ApplicationControlEvent)
-	digest := fmt.Sprintf("%.12s", e.Sha256)
-	file := e.Path + e.File
+	e := event.(*WebReputationEvent)
 
-	return []string{e.Time, e.Reason, e.Event, e.Action, digest, file}
+	return []string{e.Time, e.Risk, e.Rank, e.Url}
 }
 
 func NewTableLayout() event.TableLayout {
 	return &TableLayout{
-		header: []string{"TIME", "REASON", "EVENT", "ACTION", "DIGEST", "PATH"},
+		header: []string{"TIME", "RISK", "RANK", "URL"},
 	}
 }

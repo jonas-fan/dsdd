@@ -9,10 +9,14 @@ import (
 	"strings"
 
 	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event"
-	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/antimalware"
-	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/applicationcontrol"
-	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/integritymonitoring"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/ac"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/am"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/fw"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/im"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/ips"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/li"
 	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/system"
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event/wrs"
 	"github.com/jonas-fan/dsdd/pkg/fmtutil"
 	"github.com/spf13/cobra"
 )
@@ -30,49 +34,39 @@ func contains(slice []string, value string) bool {
 	return false
 }
 
-func newTableViewer(kind string, events []event.Event) (*event.TableViewer, error) {
-	var layout event.TableLayout
-	var name = strings.ToLower(kind)
+func checkKind(kind string) (string, event.EventBuilder, event.TableLayout, error) {
+	name := strings.ToLower(kind)
 
 	switch {
+	case contains(ac.Alias(), name):
+		return filepath.Join("Manager", "appcontrolevents.csv"), ac.New, ac.NewTableLayout(), nil
+	case contains(am.Alias(), name):
+		return filepath.Join("Manager", "antimalwareevents.csv"), am.New, am.NewTableLayout(), nil
+	case contains(fw.Alias(), name):
+		return filepath.Join("Manager", "firewallevents.csv"), fw.New, fw.NewTableLayout(), nil
+	case contains(im.Alias(), name):
+		return filepath.Join("Manager", "integrityevents.csv"), im.New, im.NewTableLayout(), nil
+	case contains(ips.Alias(), name):
+		return filepath.Join("Manager", "dpievents.csv"), ips.New, ips.NewTableLayout(), nil
+	case contains(li.Alias(), name):
+		return filepath.Join("Manager", "loginspectionevents.csv"), li.New, li.NewTableLayout(), nil
 	case contains(system.Alias(), name):
-		layout = system.NewTableLayout()
-	case contains(antimalware.Alias(), name):
-		layout = antimalware.NewTableLayout()
-	case contains(applicationcontrol.Alias(), name):
-		layout = applicationcontrol.NewTableLayout()
-	case contains(integritymonitoring.Alias(), name):
-		layout = integritymonitoring.NewTableLayout()
-	default:
-		return nil, errors.New("unknown type: " + kind)
+		return filepath.Join("Manager", "hostevents.csv"), system.New, system.NewTableLayout(), nil
+	case contains(wrs.Alias(), name):
+		return filepath.Join("Manager", "webreputationevents.csv"), wrs.New, wrs.NewTableLayout(), nil
 	}
 
-	return event.NewTableViewer(layout, events), nil
-}
-
-func newReader(kind string) (*event.Reader, error) {
-	var filename string
-	var builder event.EventBuilder
-	var name = strings.ToLower(kind)
-
-	switch {
-	case contains(system.Alias(), name):
-		filename, builder = filepath.Join("Manager", "hostevents.csv"), system.New
-	case contains(antimalware.Alias(), name):
-		filename, builder = filepath.Join("Manager", "antimalwareevents.csv"), antimalware.New
-	case contains(applicationcontrol.Alias(), name):
-		filename, builder = filepath.Join("Manager", "appcontrolevents.csv"), applicationcontrol.New
-	case contains(integritymonitoring.Alias(), name):
-		filename, builder = filepath.Join("Manager", "integrityevents.csv"), integritymonitoring.New
-	default:
-		return nil, errors.New("unknown type: " + kind)
-	}
-
-	return event.Open(filename, builder)
+	return "", nil, nil, errors.New("unknown type: " + kind)
 }
 
 func run(cmd *cobra.Command, args []string) {
-	reader, err := newReader(kind)
+	filename, builder, layout, err := checkKind(kind)
+
+	if err != nil {
+		panic(err)
+	}
+
+	reader, err := event.Open(filename, builder)
 
 	if err != nil {
 		panic(err)
@@ -103,12 +97,7 @@ func run(cmd *cobra.Command, args []string) {
 			fmt.Println(each.String())
 		}
 	} else {
-		viewer, err := newTableViewer(kind, events)
-
-		if err != nil {
-			panic(err)
-		}
-
+		viewer := event.NewTableViewer(layout, events)
 		columns := viewer.Header()
 		formatter := fmtutil.NewFormatter(columns...)
 
@@ -125,9 +114,9 @@ func run(cmd *cobra.Command, args []string) {
 func validEventType() []string {
 	return []string{
 		system.Alias()[0],
-		antimalware.Alias()[0],
-		applicationcontrol.Alias()[0],
-		integritymonitoring.Alias()[0],
+		am.Alias()[0],
+		ac.Alias()[0],
+		im.Alias()[0],
 	}
 }
 

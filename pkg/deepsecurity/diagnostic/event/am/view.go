@@ -1,6 +1,8 @@
-package integritymonitoring
+package am
 
 import (
+	"fmt"
+
 	"github.com/jonas-fan/dsdd/pkg/deepsecurity/diagnostic/event"
 )
 
@@ -13,13 +15,14 @@ func (v *TableLayout) Header() []string {
 }
 
 func (v *TableLayout) Columns(event event.Event) []string {
-	e := event.(*IntegrityMonitoringEvent)
+	e := event.(*AntiMalwareEvent)
+	malware := fmt.Sprintf("%s:%s", e.VirusType, e.Malware)
 
-	return []string{e.Time, e.Reason, e.Change, e.Process, e.Type, e.Key}
+	return []string{e.Time, e.Reason, e.ScanType, malware, e.Action, e.Infection}
 }
 
 func NewTableLayout() event.TableLayout {
 	return &TableLayout{
-		header: []string{"TIME", "REASON", "CHANGE", "BY", "TYPE", "KEY"},
+		header: []string{"TIME", "REASON", "BY", "MALWARE", "ACTION", "PATH"},
 	}
 }

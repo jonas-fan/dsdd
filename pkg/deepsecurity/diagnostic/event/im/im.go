@@ -1,4 +1,4 @@
-package integritymonitoring
+package im
 
 import (
 	"fmt"
@@ -23,11 +23,11 @@ type IntegrityMonitoringEvent struct {
 	Process     string
 }
 
-const template = `Origin:   %v <%v>
-Time:     %v
-Reason:   %v | %v
-Change:   %v | %v | %v
-By:       %v | %v
+const template = `Origin: %v <%v>
+Time:   %v
+Reason: %v | %v
+Change: %v | %v | %v
+By:     %v | %v
 
 %v
 `
@@ -77,7 +77,8 @@ func (e *IntegrityMonitoringEvent) String() string {
 		e.Key,
 		e.User,
 		e.Process,
-		pretty.Indent(e.Description))
+		pretty.Indent(e.Description),
+	)
 }
 
 // Datetime implements the `event.Event` interface.
@@ -92,5 +93,5 @@ func New() event.Event {
 
 // Alias returns alias of this pacakge.
 func Alias() []string {
-	return []string{"integritymonitoring", "integrity", "im"}
+	return []string{"im", "integrity", "integritymonitoring"}
 }

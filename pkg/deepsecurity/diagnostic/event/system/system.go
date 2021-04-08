@@ -66,7 +66,8 @@ func (e *SystemEvent) String() string {
 		e.Level,
 		e.EventId,
 		e.Event,
-		pretty.Indent(e.Description))
+		pretty.Indent(e.Description),
+	)
 }
 
 // Datetime implements the `event.Event` interface.
@@ -81,5 +82,5 @@ func New() event.Event {
 
 // Alias returns alias of this pacakge.
 func Alias() []string {
-	return []string{"system", "sys", "host"}
+	return []string{"sys", "system", "host"}
 }

@@ -1,4 +1,4 @@
-package antimalware
+package ac
 
 import (
 	"fmt"
@@ -15,14 +15,15 @@ func (v *TableLayout) Header() []string {
 }
 
 func (v *TableLayout) Columns(event event.Event) []string {
-	e := event.(*AntiMalwareEvent)
-	malware := fmt.Sprintf("%s:%s", e.VirusType, e.Malware)
+	e := event.(*ApplicationControlEvent)
+	digest := fmt.Sprintf("%.12s", e.Sha256)
+	file := e.Path + e.File
 
-	return []string{e.Time, e.Reason, e.ScanType, malware, e.Action, e.Infection}
+	return []string{e.Time, e.Reason, e.Event, e.Action, digest, file}
 }
 
 func NewTableLayout() event.TableLayout {
 	return &TableLayout{
-		header: []string{"TIME", "REASON", "BY", "MALWARE", "ACTION", "PATH"},
+		header: []string{"TIME", "REASON", "EVENT", "ACTION", "DIGEST", "PATH"},
 	}
 }
