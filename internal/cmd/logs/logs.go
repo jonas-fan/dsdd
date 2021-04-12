@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -38,6 +39,10 @@ func run(cmd *cobra.Command, args []string) {
 			matches = append(matches[:i], matches[i+1:]...)
 		}
 	}
+
+	sort.Sort(sort.Reverse(sort.StringSlice(matches)))
+
+	matches = append(matches[1:], matches[0])
 
 	pipeAll(os.Stdout, matches)
 }

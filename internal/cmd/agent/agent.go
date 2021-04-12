@@ -1,4 +1,4 @@
-package system
+package agent
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ func run(cmd *cobra.Command, args []string) {
 
 func NewCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "system",
+		Use:   "agent",
 		Short: "Display host-specific data",
 		Run:   run,
 	}

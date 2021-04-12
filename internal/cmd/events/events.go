@@ -113,10 +113,14 @@ func run(cmd *cobra.Command, args []string) {
 
 func validEventType() []string {
 	return []string{
-		system.Alias()[0],
-		am.Alias()[0],
 		ac.Alias()[0],
+		am.Alias()[0],
+		fw.Alias()[0],
 		im.Alias()[0],
+		ips.Alias()[0],
+		li.Alias()[0],
+		system.Alias()[0],
+		wrs.Alias()[0],
 	}
 }
 
@@ -131,7 +135,7 @@ func NewCommand() *cobra.Command {
 
 	flags := command.Flags()
 	flags.SetInterspersed(false)
-	flags.StringVarP(&kind, "kind", "k", "system", eventTypeDescription)
+	flags.StringVarP(&kind, "kind", "k", "sys", eventTypeDescription)
 	flags.BoolVarP(&details, "details", "d", false, "Show details")
 
 	return command

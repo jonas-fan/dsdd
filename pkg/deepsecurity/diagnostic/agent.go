@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/jonas-fan/dsdd/pkg/deepsecurity"
 )
 
 type Agent struct {
@@ -44,10 +46,10 @@ type Guid struct {
 func (a *Agent) String() string {
 	var builder strings.Builder
 
-	fmt.Fprintf(&builder, "dsa.snapshot = %s", a.Snapshot)
-	fmt.Fprintf(&builder, "\ndsa.os = %s", a.Os.Type)
-	fmt.Fprintf(&builder, "\ndsa.os.arch = %s", a.Os.Arch)
-	fmt.Fprintf(&builder, "\ndsa.os.kernel = %s", a.Os.Kernel)
+	fmt.Fprintf(&builder, "os = %s", a.Os.Type)
+	fmt.Fprintf(&builder, "\nos.arch = %s", a.Os.Arch)
+	fmt.Fprintf(&builder, "\nos.kernel = %s", a.Os.Kernel)
+	fmt.Fprintf(&builder, "\ndsa.snapshot = %s", a.Snapshot)
 	fmt.Fprintf(&builder, "\ndsa.platform = %s", a.Platform)
 	fmt.Fprintf(&builder, "\ndsa.version = %s", a.Version)
 	fmt.Fprintf(&builder, "\ndsa.guid = %s", a.Guid.Agent)
@@ -138,21 +140,6 @@ func (m *Module) compare(rhs *Module) bool {
 		return false
 	default:
 		return m.Name < rhs.Name
-	}
-}
-
-func toOS(platform string) string {
-	platform = strings.ToLower(platform)
-
-	switch {
-	case strings.HasPrefix(platform, "aix"):
-		return "aix"
-	case strings.HasPrefix(platform, "solaris"):
-		return "solaris"
-	case strings.HasPrefix(platform, "windows"):
-		return "windows"
-	default:
-		return "linux"
 	}
 }
 
@@ -247,7 +234,7 @@ func NewAgent(dirname string) (*Agent, error) {
 			agent.Platform = tokens[0] + "." + tokens[5]
 			agent.Os.Kernel = strings.Join(tokens[1:5], ".")
 			agent.Os.Arch = tokens[5]
-			agent.Os.Type = toOS(agent.Platform)
+			agent.Os.Type = deepsecurity.ToOS(agent.Platform)
 		}
 	}
 
@@ -255,6 +242,9 @@ func NewAgent(dirname string) (*Agent, error) {
 
 	if buf, err := ioutil.ReadFile(filename); err == nil {
 		xml.Unmarshal(buf, &agent.Guid)
+
+		agent.Guid.Agent = strings.ToLower(agent.Guid.Agent)
+		agent.Guid.Manager = strings.ToLower(agent.Guid.Manager)
 	}
 
 	return agent, nil
