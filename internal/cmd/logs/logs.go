@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var pattern string
+
 func pipeAll(writer io.Writer, filenames []string) {
 	for _, each := range filenames {
 		file, err := os.Open(each)
@@ -27,8 +29,7 @@ func pipeAll(writer io.Writer, filenames []string) {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	pattern := filepath.Join("Agent", "logs", "ds_agent*.log")
-	matches, err := filepath.Glob(pattern)
+	matches, err := filepath.Glob(filepath.Join("Agent", "logs", pattern))
 
 	if err != nil {
 		panic(err)
@@ -37,6 +38,7 @@ func run(cmd *cobra.Command, args []string) {
 	for i := 0; i < len(matches); i++ {
 		if strings.Contains(matches[i], "err") {
 			matches = append(matches[:i], matches[i+1:]...)
+			i--
 		}
 	}
 
@@ -53,6 +55,10 @@ func NewCommand() *cobra.Command {
 		Short: "Show logs",
 		Run:   run,
 	}
+
+	flags := command.Flags()
+	flags.SetInterspersed(true)
+	flags.StringVarP(&pattern, "pattern", "p", "ds_agent*.log", "File pattern to parse")
 
 	return command
 }

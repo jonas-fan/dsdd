@@ -134,7 +134,7 @@ func NewCommand() *cobra.Command {
 	eventTypeDescription := fmt.Sprintf("Event type (e.g., \"%s\")", strings.Join(validEventType(), "\", \""))
 
 	flags := command.Flags()
-	flags.SetInterspersed(false)
+	flags.SetInterspersed(true)
 	flags.StringVarP(&kind, "kind", "k", "sys", eventTypeDescription)
 	flags.BoolVarP(&details, "details", "d", false, "Show details")
 
