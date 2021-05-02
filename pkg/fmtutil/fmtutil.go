@@ -13,9 +13,9 @@ const (
 )
 
 type Formatter struct {
-	lines [][]string
-	width []int
-	align []Align
+	widths []int
+	aligns []Align
+	lines  [][]string
 }
 
 func max(lhs int, rhs int) int {
@@ -26,62 +26,83 @@ func max(lhs int, rhs int) int {
 	return lhs
 }
 
+func format(align Align) rune {
+	switch align {
+	case LeftAlign:
+		return '-'
+	case RightAlign:
+		return '+'
+	default:
+		panic("invalid argument")
+	}
+}
+
 func (f *Formatter) formats() []string {
-	out := make([]string, len(f.width))
-	align := []rune{
-		LeftAlign:  '-',
-		RightAlign: '+',
-	}
+	out := make([]string, len(f.widths))
+	last := len(f.widths) - 1
 
-	for index, width := range f.width {
-		out[index] = fmt.Sprintf("%%%c%ds", align[f.align[index]], width)
-	}
+	for index, width := range f.widths {
+		align := f.aligns[index]
 
-	out[len(out)-1] = "%s"
+		if (index != last) || (align == RightAlign) {
+			out[index] = fmt.Sprintf("%%%c%ds", format(align), width)
+		} else {
+			out[index] = "%s"
+		}
+	}
 
 	return out
 }
 
+// Align sets the alignment on the index-th element.
 func (f *Formatter) Align(index int, align Align) {
-	if index >= len(f.align) {
+	if index >= len(f.aligns) {
 		panic("index out of range")
 	}
 
-	f.align[index] = align
+	f.aligns[index] = align
 }
 
+// Write writes data to formatter.
 func (f *Formatter) Write(args ...string) {
-	if f.width == nil {
+	if f.widths == nil {
+		f.widths = make([]int, len(args))
+		f.aligns = make([]Align, len(args))
 		f.lines = make([][]string, 0)
-		f.width = make([]int, len(args))
-		f.align = make([]Align, len(args))
-	} else if len(f.width) != len(args) {
+	} else if len(f.widths) != len(args) {
 		panic("unexpected number of arguments")
 	}
 
 	for index, arg := range args {
-		f.width[index] = max(f.width[index], len(arg))
+		f.widths[index] = max(f.widths[index], len(arg))
 	}
 
 	f.lines = append(f.lines, args)
 }
 
+// String represents the formatted string.
 func (f *Formatter) String() string {
-	lines := make([]string, 0, len(f.lines))
-	tokens := make([]string, len(f.width))
+	var builder strings.Builder
 	formats := f.formats()
 
-	for _, line := range f.lines {
-		for index, token := range line {
-			tokens[index] = fmt.Sprintf(formats[index], token)
+	for index, line := range f.lines {
+		if index > 0 {
+			fmt.Fprintln(&builder)
 		}
 
-		lines = append(lines, strings.Join(tokens, "  "))
+		for index, token := range line {
+			if index > 0 {
+				fmt.Fprintf(&builder, "  ")
+			}
+
+			fmt.Fprintf(&builder, formats[index], token)
+		}
 	}
 
-	return strings.Join(lines, "\n")
+	return builder.String()
 }
 
+// NewFormatter returns a new formatter.
 func NewFormatter(args ...string) *Formatter {
 	formatter := &Formatter{}
 
