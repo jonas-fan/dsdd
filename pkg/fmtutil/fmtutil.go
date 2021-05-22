@@ -12,10 +12,14 @@ const (
 	RightAlign
 )
 
+type Format struct {
+	width int
+	align Align
+}
+
 type Formatter struct {
-	widths []int
-	aligns []Align
-	lines  [][]string
+	formats []Format
+	lines   [][]string
 }
 
 func max(lhs int, rhs int) int {
@@ -26,7 +30,7 @@ func max(lhs int, rhs int) int {
 	return lhs
 }
 
-func format(align Align) rune {
+func align2rune(align Align) rune {
 	switch align {
 	case LeftAlign:
 		return '-'
@@ -37,15 +41,16 @@ func format(align Align) rune {
 	}
 }
 
-func (f *Formatter) formats() []string {
-	out := make([]string, len(f.widths))
-	last := len(f.widths) - 1
+func (f *Formatter) makeFormats() []string {
+	out := make([]string, len(f.formats))
+	last := len(out) - 1
 
-	for index, width := range f.widths {
-		align := f.aligns[index]
+	for index := range out {
+		align := f.formats[index].align
+		width := f.formats[index].width
 
 		if (index != last) || (align == RightAlign) {
-			out[index] = fmt.Sprintf("%%%c%ds", format(align), width)
+			out[index] = fmt.Sprintf("%%%c%ds", align2rune(align), width)
 		} else {
 			out[index] = "%s"
 		}
@@ -56,25 +61,26 @@ func (f *Formatter) formats() []string {
 
 // Align sets the alignment on the index-th element.
 func (f *Formatter) Align(index int, align Align) {
-	if index >= len(f.aligns) {
+	if index >= len(f.formats) {
 		panic("index out of range")
 	}
 
-	f.aligns[index] = align
+	f.formats[index].align = align
 }
 
 // Write writes data to formatter.
 func (f *Formatter) Write(args ...string) {
-	if f.widths == nil {
-		f.widths = make([]int, len(args))
-		f.aligns = make([]Align, len(args))
+	if f.formats == nil {
+		f.formats = make([]Format, len(args))
 		f.lines = make([][]string, 0)
-	} else if len(f.widths) != len(args) {
+	} else if len(f.formats) != len(args) {
 		panic("unexpected number of arguments")
 	}
 
 	for index, arg := range args {
-		f.widths[index] = max(f.widths[index], len(arg))
+		format := &f.formats[index]
+
+		format.width = max(format.width, len(arg))
 	}
 
 	f.lines = append(f.lines, args)
@@ -83,7 +89,7 @@ func (f *Formatter) Write(args ...string) {
 // String represents the formatted string.
 func (f *Formatter) String() string {
 	var builder strings.Builder
-	formats := f.formats()
+	formats := f.makeFormats()
 
 	for index, line := range f.lines {
 		if index > 0 {
