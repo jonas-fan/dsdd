@@ -6,7 +6,7 @@ import (
 
 func check(t *testing.T, out string, expected string) {
 	if out != expected {
-		t.Errorf("Expected: %s, got: %s", expected, out)
+		t.Errorf("expected: %s, got: %s", expected, out)
 	}
 }
 
