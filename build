@@ -2,10 +2,37 @@
 
 set -o errexit
 
+function usage
+{
+    echo "Usage: ./build [option]"
+    echo ""
+    echo "Option:"
+    echo "    linux/amd64"
+    echo "    windows/amd64"
+    echo ""
+}
+
 case "$1" in
-    "linux/amd64")
+    "")
+        # depends on current env
+        ;;
+    linux/amd64)
         GOOS=linux
         GOARCH=amd64
+        ;;
+    windows/amd64)
+        GOOS=windows
+        GOARCH=amd64
+        ;;
+    -h|--help)
+        usage
+        exit 1
+        ;;
+    *)
+        echo "'$1': undefined option"
+        echo ""
+        usage
+        exit 1
         ;;
 esac
 
