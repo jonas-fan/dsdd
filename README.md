@@ -35,13 +35,13 @@ Flags:
 
 Here is an example of using `dsdd` to describe Deep Security diagnostic packages.
 
-Firstly, change working directory.
+Firstly, unarchive the package, and then change working directory.
 
 ```bash
 $ cd diagnostic1163886380
 ```
 
-List the host events.
+List the recorded host events.
 
 ```bash
 $ dsdd events
@@ -50,10 +50,10 @@ TIME                 ORIGIN   LEVEL  EVENT ID  EVENT
 2021-03-16 08:51:01  Manager  Info   273       Security Update: Security Update Check and Download Requested
 ```
 
-Or you may want details.
+And you may want details.
 
 ```bash
-$ dsdd evnets
+$ dsdd evnets --details
 Origin: Agent <System@10.209.62.8>
 Target: 10.209.60.43
 Time:   2021-03-16 08:51:44
